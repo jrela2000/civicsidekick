@@ -67,7 +67,7 @@ Return JSON with:
 
 Include federal (President, VP, US Senators x2, US Rep), state (Governor, Lt Governor, state legislators), county, and local officials. Use real current officials as of early 2026. Keep the list to the most important ~15-20 officials.`,
       add_context_from_internet: true,
-      model: "gemini_3_pro",
+      model: "gemini_3_flash",
       response_json_schema: {
         type: "object",
         properties: {
