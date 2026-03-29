@@ -59,33 +59,18 @@ export default function Officials() {
     }
 
     const result = await base44.integrations.Core.InvokeLLM({
-      prompt: `You are a civic information assistant. Look up the elected officials for the address: "${searchAddress}" in the United States.
+      prompt: `Look up elected officials for the US address: "${searchAddress}".
 
-Return a JSON object with:
-1. "state": the 2-letter US state abbreviation (e.g. "CA", "NY", "TX") extracted from the address
-2. "normalizedAddress": the formatted full address
-3. "officials": an array of objects, each with:
-   - "name": full name of the official
-   - "title": official title (e.g. "U.S. Senator", "Governor", "Mayor", "City Council Member")
-   - "party": political party abbreviation if known (e.g. "Democratic", "Republican", "Independent") or empty string
-   - "level": one of "Federal", "State", "County", "Local"
-   - "jurisdiction": the geographic area they represent (e.g. "California", "Los Angeles County", "City of Beverly Hills")
-   - "phones": array of phone numbers (strings), or empty array
-   - "emails": array of email addresses (strings), or empty array
-   - "urls": array of website URLs (strings), or empty array
-   - "photoUrl": portrait photo URL if available, or empty string
-   - "address": array with one object { line1, city, state, zip } for their office, or empty array
-   - "channels": array of { type: "Twitter"|"Facebook"|"YouTube", id: handle or URL } or empty array
+Return JSON with:
+- state: 2-letter state abbreviation
+- officials: array of objects with fields: name, title, party, level (Federal/State/County/Local), phones (array), emails (array), urls (array)
 
-Include ALL levels: federal (president, VP, US senators, US representative for that district), state (governor, lieutenant governor, state senators, state assembly/representatives), county officials, and local (mayor, city council).
-
-Be thorough and accurate. Use real current officials as of early 2026.`,
+Include federal (President, VP, US Senators x2, US Rep), state (Governor, Lt Governor, state legislators), county, and local officials. Use real current officials as of early 2026. Keep the list to the most important ~15-20 officials.`,
       add_context_from_internet: true,
       response_json_schema: {
         type: "object",
         properties: {
           state: { type: "string" },
-          normalizedAddress: { type: "string" },
           officials: {
             type: "array",
             items: {
@@ -95,13 +80,9 @@ Be thorough and accurate. Use real current officials as of early 2026.`,
                 title: { type: "string" },
                 party: { type: "string" },
                 level: { type: "string" },
-                jurisdiction: { type: "string" },
                 phones: { type: "array", items: { type: "string" } },
                 emails: { type: "array", items: { type: "string" } },
-                urls: { type: "array", items: { type: "string" } },
-                photoUrl: { type: "string" },
-                address: { type: "array", items: { type: "object" } },
-                channels: { type: "array", items: { type: "object" } }
+                urls: { type: "array", items: { type: "string" } }
               }
             }
           }
