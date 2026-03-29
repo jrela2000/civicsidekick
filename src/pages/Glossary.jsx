@@ -1,158 +1,95 @@
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { BookOpen, Search, ChevronDown } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import { getAllOfficeDescriptions } from "../data/officeDescriptions";
+import { useState } from "react";
+import { Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
+
+const levelColors = {
+  Federal: "bg-blue-100 text-blue-700 border border-blue-200",
+  State: "bg-purple-100 text-purple-700 border border-purple-200",
+  County: "bg-amber-100 text-amber-700 border border-amber-200",
+  Local: "bg-green-100 text-green-700 border border-green-200",
+};
 
 const levelOrder = ["Federal", "State", "County", "Local"];
 
-function GlossaryEntry({ title, info, isOpen, onToggle }) {
-  return (
-    <div className="border border-border/60 rounded-xl overflow-hidden bg-card">
-      <button
-        onClick={onToggle}
-        className="w-full flex items-center justify-between p-4 text-left hover:bg-muted/30 transition-colors"
-      >
-        <div>
-          <h3 className="font-semibold text-foreground text-sm sm:text-base">{title}</h3>
-          <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-medium ${
-            info.level === "Federal" ? "bg-primary/10 text-primary" :
-            info.level === "State" ? "bg-blue-50 text-blue-700" :
-            info.level === "County" ? "bg-amber-50 text-amber-700" :
-            "bg-emerald-50 text-emerald-700"
-          }`}>
-            {info.level}
-          </span>
-        </div>
-        <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
-      </button>
-
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="overflow-hidden"
-          >
-            <div className="px-4 pb-4 pt-0 border-t border-border/40">
-              <p className="text-sm text-foreground/80 leading-relaxed mt-3">
-                {info.description}
-              </p>
-              {info.responsibilities && (
-                <div className="mt-3">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-                    Key Responsibilities
-                  </p>
-                  <ul className="space-y-1.5">
-                    {info.responsibilities.map((r, i) => (
-                      <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-primary/30 mt-1.5 flex-shrink-0" />
-                        {r}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
 export default function Glossary() {
   const [search, setSearch] = useState("");
-  const [openEntry, setOpenEntry] = useState(null);
+  const all = getAllOfficeDescriptions();
 
-  const allDescriptions = getAllOfficeDescriptions();
+  const filtered = Object.entries(all).filter(([title, info]) =>
+    title.toLowerCase().includes(search.toLowerCase()) ||
+    info.description.toLowerCase().includes(search.toLowerCase())
+  );
 
-  const filteredEntries = Object.entries(allDescriptions).filter(([title, info]) => {
-    if (!search) return true;
-    const s = search.toLowerCase();
-    return title.toLowerCase().includes(s) || info.description.toLowerCase().includes(s) || info.level.toLowerCase().includes(s);
-  });
-
-  const groupedByLevel = {};
-  filteredEntries.forEach(([title, info]) => {
-    if (!groupedByLevel[info.level]) groupedByLevel[info.level] = [];
-    groupedByLevel[info.level].push({ title, info });
-  });
+  const grouped = levelOrder.reduce((acc, level) => {
+    const entries = filtered.filter(([, info]) => info.level === level);
+    if (entries.length) acc[level] = entries;
+    return acc;
+  }, {});
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="space-y-4"
-      >
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-            <BookOpen className="w-5 h-5 text-primary" />
-          </div>
-          <div>
-            <h1 className="font-display text-2xl sm:text-3xl font-bold text-foreground">
-              Office Glossary
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Understand what each political office does
-            </p>
-          </div>
-        </div>
-
-        <div className="relative max-w-md">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-          <Input
-            type="text"
-            placeholder="Search offices..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-10 h-11 bg-card border-border/60 rounded-xl"
-          />
-        </div>
-      </motion.div>
-
-      {/* Entries by level */}
-      <div className="space-y-8">
-        {levelOrder.map((level) => {
-          const entries = groupedByLevel[level];
-          if (!entries?.length) return null;
-
-          return (
-            <motion.section
-              key={level}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-              className="space-y-3"
-            >
-              <h2 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
-                {level} Level
-              </h2>
-              <div className="grid gap-2">
-                {entries.map(({ title, info }) => (
-                  <GlossaryEntry
-                    key={title}
-                    title={title}
-                    info={info}
-                    isOpen={openEntry === title}
-                    onToggle={() => setOpenEntry(openEntry === title ? null : title)}
-                  />
-                ))}
-              </div>
-            </motion.section>
-          );
-        })}
-
-        {filteredEntries.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground">No offices found matching "{search}"</p>
-          </div>
-        )}
+    <div className="max-w-4xl mx-auto px-4 py-10">
+      <div className="mb-8 text-center">
+        <h1 className="font-display font-bold text-3xl sm:text-4xl text-foreground mb-3">Offices Glossary</h1>
+        <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+          Plain-language explanations of every elected office — what they do and who they serve.
+        </p>
       </div>
+
+      {/* Search */}
+      <div className="relative max-w-md mx-auto mb-10">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <Input
+          placeholder="Search offices…"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="pl-9 h-11 rounded-xl border-2"
+        />
+      </div>
+
+      {/* Grouped Entries */}
+      <div className="space-y-8">
+        {levelOrder.filter(l => grouped[l]).map(level => (
+          <div key={level}>
+            <h2 className="font-display font-bold text-xl text-foreground mb-4 flex items-center gap-2">
+              <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${levelColors[level]}`}>{level}</span>
+              Government Offices
+            </h2>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {grouped[level].map(([title, info]) => (
+                <div key={title} className="bg-card border border-border rounded-2xl p-5 hover:shadow-md transition-shadow">
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <h3 className="font-semibold text-foreground text-base leading-tight">{title}</h3>
+                    <span className={`text-xs shrink-0 font-medium px-2 py-0.5 rounded-full ${levelColors[info.level]}`}>
+                      {info.level}
+                    </span>
+                  </div>
+                  <p className="text-muted-foreground text-sm mb-3 leading-relaxed">{info.description}</p>
+                  <div>
+                    <p className="text-xs font-semibold text-foreground uppercase tracking-wide mb-2">Key Responsibilities</p>
+                    <ul className="space-y-1">
+                      {info.responsibilities.map((r, i) => (
+                        <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
+                          <span className="text-primary mt-0.5">•</span>
+                          {r}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {filtered.length === 0 && (
+        <div className="text-center py-16 text-muted-foreground">
+          <Search className="w-10 h-10 mx-auto mb-3 opacity-30" />
+          <p className="text-lg font-medium">No results for "{search}"</p>
+          <p className="text-sm mt-1">Try a different search term</p>
+        </div>
+      )}
     </div>
   );
 }

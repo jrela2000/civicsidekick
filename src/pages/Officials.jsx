@@ -1,229 +1,208 @@
-import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { motion } from "framer-motion";
-import { ArrowLeft, MapPin, Loader2, RefreshCw, AlertTriangle } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
+import AddressInput from "../components/AddressInput";
 import LevelSection from "../components/LevelSection";
 import VoterRegistration from "../components/VoterRegistration";
-import { getOfficeDescription } from "../data/officeDescriptions";
+import { AlertCircle, ArrowLeft, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
-function classifyLevel(office) {
-  const desc = getOfficeDescription(office.name);
-  if (desc) return desc.level;
+const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 
-  const name = office.name.toLowerCase();
-  const levels = office.levels || [];
-  const divisionId = office.divisionId || "";
-
-  if (levels.includes("country") || divisionId === "ocd-division/country:us" || name.includes("u.s.") || name.includes("united states")) return "Federal";
-  if (levels.includes("administrativeArea1") || divisionId.includes("/state:") && !divisionId.includes("/county:") && !divisionId.includes("/place:")) return "State";
-  if (levels.includes("administrativeArea2") || divisionId.includes("/county:")) return "County";
-  if (levels.includes("locality") || levels.includes("subLocality1") || levels.includes("subLocality2") || divisionId.includes("/place:")) return "Local";
-
-  return "Other";
+function getCache(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const { data, timestamp } = JSON.parse(raw);
+    if (Date.now() - timestamp > CACHE_DURATION) { localStorage.removeItem(key); return null; }
+    return data;
+  } catch { return null; }
 }
+
+function setCache(key, data) {
+  try { localStorage.setItem(key, JSON.stringify({ data, timestamp: Date.now() })); } catch {}
+}
+
+function classifyLevel(divisionId, officeLevel, officeRoles) {
+  if (!divisionId) return "Local";
+  if (divisionId.includes("country:us") && !divisionId.includes("state") && !divisionId.includes("county") && !divisionId.includes("city")) return "Federal";
+  if (officeLevel?.includes("country")) return "Federal";
+  if (divisionId.match(/state:[a-z]{2}$/) || officeLevel?.includes("administrativeArea1")) return "State";
+  if (divisionId.includes("county") || officeLevel?.includes("administrativeArea2")) return "County";
+  return "Local";
+}
+
+const LEVELS_ORDER = ["Federal", "State", "County", "Local"];
 
 export default function Officials() {
   const navigate = useNavigate();
-  const [officials, setOfficials] = useState([]);
-  const [groupedOfficials, setGroupedOfficials] = useState({});
-  const [isLoading, setIsLoading] = useState(true);
+  const [address, setAddress] = useState("");
+  const [officials, setOfficials] = useState(null);
+  const [state, setState] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [fromCache, setFromCache] = useState(false);
 
-  const address = sessionStorage.getItem("civicAddress");
-  const stateCode = sessionStorage.getItem("civicState");
-
-  useEffect(() => {
-    if (!address) {
-      navigate("/");
-      return;
-    }
-    fetchOfficials();
-  }, []);
-
-  const fetchOfficials = async () => {
+  const fetchOfficials = useCallback(async (searchAddress) => {
     setIsLoading(true);
     setError("");
+    setFromCache(false);
+
+    const cacheKey = `civics:${searchAddress.toLowerCase().trim()}`;
+    const cached = getCache(cacheKey);
+    if (cached) {
+      setOfficials(cached.officials);
+      setState(cached.state || "");
+      setFromCache(true);
+      setIsLoading(false);
+      return;
+    }
 
     const result = await base44.integrations.Core.InvokeLLM({
-      prompt: `Look up ALL elected officials who represent this US address: "${address}"
+      prompt: `You are a civic information assistant. Look up the elected officials for the address: "${searchAddress}" in the United States.
 
-Use your knowledge of current US government officials. Include ALL levels:
-- Federal: President, Vice President, US Senators, US Representative
-- State: Governor, Lieutenant Governor, State Senators, State Representatives/Assembly members, Attorney General, Secretary of State
-- County: County executives, commissioners, sheriff, district attorney, clerks
-- Local: Mayor, city council members, school board members
+Return a JSON object with:
+1. "state": the 2-letter US state abbreviation (e.g. "CA", "NY", "TX") extracted from the address
+2. "normalizedAddress": the formatted full address
+3. "officials": an array of objects, each with:
+   - "name": full name of the official
+   - "title": official title (e.g. "U.S. Senator", "Governor", "Mayor", "City Council Member")
+   - "party": political party abbreviation if known (e.g. "Democratic", "Republican", "Independent") or empty string
+   - "level": one of "Federal", "State", "County", "Local"
+   - "jurisdiction": the geographic area they represent (e.g. "California", "Los Angeles County", "City of Beverly Hills")
+   - "phones": array of phone numbers (strings), or empty array
+   - "emails": array of email addresses (strings), or empty array
+   - "urls": array of website URLs (strings), or empty array
+   - "photoUrl": portrait photo URL if available, or empty string
+   - "address": array with one object { line1, city, state, zip } for their office, or empty array
+   - "channels": array of { type: "Twitter"|"Facebook"|"YouTube", id: handle or URL } or empty array
 
-For each official, provide as much information as you can find:
-- Full name
-- Office/title (use standard titles like "U.S. Senator", "Governor", etc.)
-- Political party (full name like "Democratic Party" or "Republican Party")
-- Phone number(s) if known
-- Email if known
-- Official website URL if known
-- Office address if known
-- Social media channels (type and ID) if known
-- Photo URL if known
+Include ALL levels: federal (president, VP, US senators, US representative for that district), state (governor, lieutenant governor, state senators, state assembly/representatives), county officials, and local (mayor, city council).
 
-Be thorough - include every official you can identify for this specific address. It's important to be accurate.`,
+Be thorough and accurate. Use real current officials as of early 2026.`,
       add_context_from_internet: true,
       response_json_schema: {
         type: "object",
         properties: {
-          success: { type: "boolean" },
+          state: { type: "string" },
+          normalizedAddress: { type: "string" },
           officials: {
             type: "array",
             items: {
               type: "object",
               properties: {
                 name: { type: "string" },
-                office: { type: "string" },
+                title: { type: "string" },
                 party: { type: "string" },
+                level: { type: "string" },
+                jurisdiction: { type: "string" },
                 phones: { type: "array", items: { type: "string" } },
                 emails: { type: "array", items: { type: "string" } },
                 urls: { type: "array", items: { type: "string" } },
-                address: { type: "string" },
                 photoUrl: { type: "string" },
-                channels: {
-                  type: "array",
-                  items: {
-                    type: "object",
-                    properties: {
-                      type: { type: "string" },
-                      id: { type: "string" }
-                    }
-                  }
-                },
-                level: { type: "string" }
+                address: { type: "array", items: { type: "object" } },
+                channels: { type: "array", items: { type: "object" } }
               }
             }
-          },
-          error_message: { type: "string" }
+          }
         }
-      },
-      model: "gemini_3_flash"
+      }
     });
 
-    if (!result.success || !result.officials?.length) {
-      setError(result.error_message || "Could not find officials for this address. Please try again.");
+    if (!result || !result.officials || result.officials.length === 0) {
+      setError("We couldn't find officials for that address. Please check the address and try again, or try entering just your zip code.");
       setIsLoading(false);
       return;
     }
 
-    // Group by level
-    const levelOrder = ["Federal", "State", "County", "Local", "Other"];
-    const grouped = {};
-
-    result.officials.forEach((official) => {
-      let level = official.level || "Other";
-      if (!levelOrder.includes(level)) {
-        level = classifyLevel({ name: official.office, levels: [], divisionId: "" });
-      }
-      if (!grouped[level]) grouped[level] = [];
-      grouped[level].push(official);
-    });
-
+    const data = { officials: result.officials, state: result.state || "" };
+    setCache(cacheKey, data);
     setOfficials(result.officials);
-    setGroupedOfficials(grouped);
+    setState(result.state || "");
     setIsLoading(false);
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const addr = params.get("address");
+    if (addr) {
+      setAddress(addr);
+      fetchOfficials(addr);
+    }
+  }, [fetchOfficials]);
+
+  const handleNewSearch = (newAddress) => {
+    setAddress(newAddress);
+    navigate(`/officials?address=${encodeURIComponent(newAddress)}`);
+    fetchOfficials(newAddress);
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center py-24 gap-4">
-        <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
-          <Loader2 className="w-7 h-7 text-primary animate-spin" />
-        </div>
-        <div className="text-center space-y-1.5">
-          <p className="font-semibold text-foreground">Finding your representatives...</p>
-          <p className="text-sm text-muted-foreground">Searching all government levels</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center py-24 gap-6">
-        <div className="w-16 h-16 rounded-2xl bg-destructive/10 flex items-center justify-center">
-          <AlertTriangle className="w-7 h-7 text-destructive" />
-        </div>
-        <div className="text-center space-y-2 max-w-md">
-          <p className="font-semibold text-foreground">Something went wrong</p>
-          <p className="text-sm text-muted-foreground">{error}</p>
-        </div>
-        <div className="flex gap-3">
-          <Button variant="outline" onClick={() => navigate("/")}>
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            New Search
-          </Button>
-          <Button onClick={fetchOfficials}>
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Try Again
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  const levelOrder = ["Federal", "State", "County", "Local", "Other"];
-  let runningIndex = 0;
+  const grouped = officials
+    ? LEVELS_ORDER.reduce((acc, level) => {
+        const group = officials.filter(o => (o.level || "Local") === level);
+        if (group.length > 0) acc[level] = group;
+        return acc;
+      }, {})
+    : {};
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <Link
-            to="/"
-            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-3"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            New search
-          </Link>
-          <h1 className="font-display text-2xl sm:text-3xl font-bold text-foreground">
-            Your Representatives
-          </h1>
-          <div className="flex items-center gap-2 mt-1.5">
-            <MapPin className="w-4 h-4 text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">{address}</p>
+    <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
+      {/* Search bar */}
+      <div className="bg-card border border-border rounded-2xl p-4 sm:p-6">
+        <h2 className="font-display font-bold text-xl text-foreground mb-4">Search Another Address</h2>
+        <AddressInput onSearch={handleNewSearch} isLoading={isLoading} />
+      </div>
+
+      {/* Loading */}
+      {isLoading && (
+        <div className="text-center py-16">
+          <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin mx-auto mb-4" />
+          <p className="font-semibold text-foreground text-lg">Finding your representatives…</p>
+          <p className="text-muted-foreground text-sm mt-1">Searching civic data for: {address}</p>
+        </div>
+      )}
+
+      {/* Error */}
+      {!isLoading && error && (
+        <div className="bg-destructive/10 border border-destructive/30 rounded-2xl p-6 text-center">
+          <AlertCircle className="w-10 h-10 text-destructive mx-auto mb-3" />
+          <h3 className="font-semibold text-foreground text-lg mb-2">Unable to find officials</h3>
+          <p className="text-muted-foreground text-sm mb-4">{error}</p>
+          <Button variant="outline" onClick={() => navigate("/")} className="gap-2">
+            <ArrowLeft className="w-4 h-4" /> Try a Different Address
+          </Button>
+        </div>
+      )}
+
+      {/* Results */}
+      {!isLoading && officials && officials.length > 0 && (
+        <>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="font-display font-bold text-2xl text-foreground">Your Representatives</h1>
+              <p className="text-muted-foreground text-sm mt-0.5">
+                {officials.length} officials found for <span className="font-medium text-foreground">{address}</span>
+                {fromCache && <span className="ml-2 text-xs text-primary bg-primary/10 px-2 py-0.5 rounded-full">Cached</span>}
+              </p>
+            </div>
+            <Button variant="ghost" size="sm" onClick={() => {
+              localStorage.removeItem(`civics:${address.toLowerCase().trim()}`);
+              fetchOfficials(address);
+            }} className="gap-2 text-muted-foreground hover:text-foreground">
+              <RefreshCw className="w-4 h-4" /> Refresh
+            </Button>
           </div>
-        </div>
 
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/5 border border-primary/10"
-        >
-          <span className="text-2xl font-bold text-primary">{officials.length}</span>
-          <span className="text-sm text-muted-foreground">officials found</span>
-        </motion.div>
-      </div>
+          {/* Voter Registration */}
+          {state && <VoterRegistration state={state} />}
 
-      {/* Officials by level */}
-      <div className="space-y-10">
-        {levelOrder.map((level) => {
-          const levelOfficials = groupedOfficials[level];
-          if (!levelOfficials?.length) return null;
-          const section = (
-            <LevelSection
-              key={level}
-              level={level}
-              officials={levelOfficials}
-              startIndex={runningIndex}
-            />
-          );
-          runningIndex += levelOfficials.length;
-          return section;
-        })}
-      </div>
-
-      {/* Voter Registration */}
-      {stateCode && (
-        <div className="pt-4">
-          <VoterRegistration stateCode={stateCode} />
-        </div>
+          {/* Officials by level */}
+          <div className="space-y-4">
+            {LEVELS_ORDER.filter(l => grouped[l]).map(level => (
+              <LevelSection key={level} level={level} officials={grouped[level]} />
+            ))}
+          </div>
+        </>
       )}
     </div>
   );
