@@ -10,6 +10,7 @@ import Layout from './components/Layout.jsx';
 import Home from './pages/Home';
 import Officials from './pages/Officials';
 import Glossary from './pages/Glossary';
+import Settings from './pages/Settings';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -42,6 +43,7 @@ const AuthenticatedApp = () => {
         <Route path="/" element={<Home />} />
         <Route path="/officials" element={<Officials />} />
         <Route path="/glossary" element={<Glossary />} />
+        <Route path="/settings" element={<Settings />} />
         <Route path="*" element={<PageNotFound />} />
       </Route>
     </Routes>

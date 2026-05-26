@@ -9,6 +9,7 @@ export default function AppHeader() {
   const titles = {
     "/officials": "Your Representatives",
     "/glossary": "Office Glossary",
+    "/settings": "Settings",
   };
   const title = titles[location.pathname] ?? "Civic Sidekick";
 
