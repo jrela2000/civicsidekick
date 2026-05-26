@@ -88,4 +88,14 @@
     @apply bg-background text-foreground font-sans;
     overscroll-behavior-y: none;
   }
+
+  button, a, nav, [role="button"] {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  p, span.selectable, .contact-details, .description-text {
+    -webkit-user-select: text;
+    user-select: text;
+  }
 }

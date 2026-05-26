@@ -71,7 +71,7 @@ export default function OfficialCard({ official }) {
       {expanded && (
         <div className="border-t border-border px-4 pb-4 pt-3 space-y-3 bg-muted/30">
           {/* Contact Info */}
-          <div className="space-y-2">
+          <div className="space-y-2 contact-details">
             {official.phones?.length > 0 && (
               <a href={`tel:${official.phones[0]}`}
                 className="flex items-center gap-2 text-sm text-foreground hover:text-primary transition-colors">
@@ -125,7 +125,7 @@ export default function OfficialCard({ official }) {
                 {roleExpanded ? <ChevronUp className="w-4 h-4 ml-auto" /> : <ChevronDown className="w-4 h-4 ml-auto" />}
               </button>
               {roleExpanded && (
-                <div className="mt-2 text-sm text-muted-foreground space-y-2">
+                <div className="mt-2 text-sm text-muted-foreground space-y-2 description-text">
                   <p>{description.description}</p>
                   <ul className="list-disc list-inside space-y-1">
                     {description.responsibilities.map((r, i) => (

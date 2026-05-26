@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import AddressInput from "../components/AddressInput";
@@ -42,6 +42,26 @@ export default function Officials() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [fromCache, setFromCache] = useState(false);
+  const [pullDistance, setPullDistance] = useState(0);
+  const touchStartY = useRef(null);
+  const PULL_THRESHOLD = 70;
+
+  const handleTouchStart = (e) => {
+    if (window.scrollY === 0) touchStartY.current = e.touches[0].clientY;
+  };
+  const handleTouchMove = (e) => {
+    if (touchStartY.current === null) return;
+    const delta = e.touches[0].clientY - touchStartY.current;
+    if (delta > 0) setPullDistance(Math.min(delta, PULL_THRESHOLD + 20));
+  };
+  const handleTouchEnd = () => {
+    if (pullDistance >= PULL_THRESHOLD && address) {
+      localStorage.removeItem(`civics:${address.toLowerCase().trim()}`);
+      fetchOfficials(address);
+    }
+    setPullDistance(0);
+    touchStartY.current = null;
+  };
 
   const fetchOfficials = useCallback(async (searchAddress) => {
     setIsLoading(true);
@@ -128,7 +148,20 @@ Include federal (President, VP, US Senators x2, US Rep), state (Governor, Lt Gov
     : {};
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
+    <div
+      className="max-w-5xl mx-auto px-4 py-8 space-y-6"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
+      {/* Pull-to-refresh indicator */}
+      {pullDistance > 0 && (
+        <div className="flex justify-center py-2 -mt-6 text-muted-foreground text-sm select-none"
+          style={{ transform: `translateY(${Math.min(pullDistance - 20, 40)}px)`, transition: "none" }}>
+          <RefreshCw className={`w-5 h-5 mr-2 ${pullDistance >= PULL_THRESHOLD ? "text-primary animate-spin" : ""}`} />
+          {pullDistance >= PULL_THRESHOLD ? "Release to refresh" : "Pull to refresh"}
+        </div>
+      )}
       {/* Search bar */}
       <div className="bg-card border border-border rounded-2xl p-4 sm:p-6">
         <h2 className="font-display font-bold text-xl text-foreground mb-4">Search Another Address</h2>
