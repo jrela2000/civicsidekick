@@ -19,8 +19,8 @@ function SocialLink({ type, url }) {
   const config = icons[type] || { icon: Globe, color: "text-gray-500" };
   const Icon = config.icon;
   return (
-    <a href={url} target="_blank" rel="noopener noreferrer"
-      className={`${config.color} hover:opacity-75 transition-opacity`}
+    <a href={url} target="_blank" rel="noopener noreferrer" referrerPolicy="no-referrer"
+      className={`${config.color} hover:opacity-75 transition-opacity select-none`}
       title={type}>
       <Icon className="w-4 h-4" />
     </a>
@@ -59,7 +59,7 @@ export default function OfficialCard({ official }) {
           </div>
           <button
             onClick={() => setExpanded(!expanded)}
-            className="shrink-0 p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground"
+            className="shrink-0 p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground select-none"
             aria-label={expanded ? "Collapse details" : "Expand details"}
           >
             {expanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
@@ -87,10 +87,10 @@ export default function OfficialCard({ official }) {
               </a>
             )}
             {official.urls?.length > 0 && (
-              <a href={official.urls[0]} target="_blank" rel="noopener noreferrer"
-                className="flex items-center gap-2 text-sm text-primary hover:underline break-all">
+              <a href={official.urls[0]} target="_blank" rel="noopener noreferrer" referrerPolicy="no-referrer"
+                className="flex items-center gap-2 text-sm text-primary hover:underline break-all select-none">
                 <Globe className="w-4 h-4 shrink-0" />
-                Official Website
+                Official Website ↗
               </a>
             )}
             {official.address?.length > 0 && (
