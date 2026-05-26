@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { Outlet } from "react-router-dom";
-import { BookOpen, Home, MapPin } from "lucide-react";
+import { BookOpen, Home } from "lucide-react";
 
 export default function Layout() {
   const location = useLocation();
@@ -16,13 +16,15 @@ export default function Layout() {
       <header className="bg-primary text-primary-foreground shadow-lg sticky top-0 z-50">
         <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 group">
-            <div className="bg-accent rounded-lg p-1.5">
-              <MapPin className="w-4 h-4 text-accent-foreground" />
-            </div>
-            <div>
-              <span className="font-display font-bold text-lg leading-none block">CivicLens</span>
-              <span className="text-primary-foreground/60 text-xs">Know Your Representatives</span>
-            </div>
+           <img
+             src="https://media.base44.com/images/public/69c8b5b7d04008fffce57b83/b1d1b1cee_cslogo.jpg"
+             alt="Civic Sidekick"
+             className="w-8 h-8 rounded-lg object-contain bg-white"
+           />
+           <div>
+             <span className="font-display font-bold text-lg leading-none block">Civic Sidekick</span>
+             <span className="text-primary-foreground/60 text-xs">Non-partisan · Ad-free · Privacy-first</span>
+           </div>
           </Link>
           <nav className="flex items-center gap-1">
             {navLinks.map(({ to, label, icon: Icon }) => (
@@ -51,9 +53,9 @@ export default function Layout() {
       {/* Footer */}
       <footer className="bg-primary/5 border-t border-border mt-8">
         <div className="max-w-5xl mx-auto px-4 py-6 text-center text-muted-foreground text-sm">
-          <p className="font-medium text-foreground mb-1">CivicLens</p>
-          <p>Empowering citizens to know and engage with their elected representatives.</p>
-          <p className="mt-2 text-xs">Data provided via civic information services. Always verify with official sources.</p>
+          <p className="font-medium text-foreground mb-1">Civic Sidekick</p>
+          <p>Non-partisan · Ad-free · Privacy-first. Public information, served fast.</p>
+          <p className="mt-2 text-xs">Data sourced from public APIs. No tracking. No data stored. Always verify with official sources.</p>
         </div>
       </footer>
     </div>
