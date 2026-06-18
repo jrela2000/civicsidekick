@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import AddressInput from "../components/AddressInput";
 import LevelSection from "../components/LevelSection";
 import VoterRegistration from "../components/VoterRegistration";
-import { AlertCircle, ArrowLeft, RefreshCw } from "lucide-react";
+import { AlertCircle, ArrowLeft, RefreshCw, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
@@ -210,6 +210,22 @@ Include federal (President, VP, US Senators x2, US Rep), state (Governor, Lt Gov
 
           {/* Voter Registration */}
           {state && <VoterRegistration state={state} />}
+
+          {/* Deadlines link */}
+          {state && (
+            <div className="bg-card border border-border rounded-2xl p-5 flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold text-foreground">Election Deadlines</h3>
+                <p className="text-sm text-muted-foreground mt-0.5">View upcoming deadlines and save them to your calendar</p>
+              </div>
+              <Link
+                to={`/deadlines?state=${state}&address=${encodeURIComponent(address)}`}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors shrink-0"
+              >
+                <Calendar className="w-4 h-4" /> View Deadlines
+              </Link>
+            </div>
+          )}
 
           {/* Officials by level */}
           <div className="space-y-4">

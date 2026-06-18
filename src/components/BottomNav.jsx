@@ -1,9 +1,10 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, BookOpen, Settings } from "lucide-react";
+import { Home, BookOpen, Settings, Calendar } from "lucide-react";
 
 const navLinks = [
   { to: "/", label: "Home", icon: Home },
   { to: "/glossary", label: "Offices", icon: BookOpen },
+  { to: "/deadlines", label: "Deadlines", icon: Calendar },
   { to: "/settings", label: "Settings", icon: Settings },
 ];
 
