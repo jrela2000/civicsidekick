@@ -26,6 +26,9 @@ export default function AppHeader() {
           <ArrowLeft className="w-5 h-5" />
         </button>
       )}
+      {isRoot ? (
+        <img src="https://media.base44.com/images/public/69c8b5b7d04008fffce57b83/eacc81739_civicsidekick_logo.png" alt="Civic Sidekick" className="h-8 w-8 object-contain invert" />
+      ) : null}
       <span className="font-display font-bold text-lg">{isRoot ? "Civic Sidekick" : title}</span>
     </header>
   );
