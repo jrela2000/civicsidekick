@@ -10,6 +10,7 @@ export default function AppHeader() {
     "/officials": "Your Representatives",
     "/glossary": "Office Glossary",
     "/settings": "Settings",
+    "/deadlines": "Election Deadlines",
   };
   const title = titles[location.pathname] ?? "Civic Sidekick";
 
