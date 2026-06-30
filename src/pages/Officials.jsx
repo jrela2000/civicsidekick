@@ -79,13 +79,13 @@ export default function Officials() {
     }
 
     const result = await base44.integrations.Core.InvokeLLM({
-      prompt: `Look up elected officials for the US address: "${searchAddress}".
+      prompt: `Look up elected officials for the US address: "${searchAddress}" as of June 2026. Search for the most current information available.
 
 Return JSON with:
 - state: 2-letter state abbreviation
 - officials: array of objects with fields: name, title, party, level (Federal/State/County/Local), phones (array), emails (array), urls (array)
 
-Include federal (President, VP, US Senators x2, US Rep), state (Governor, Lt Governor, state legislators), county, and local officials. Use real current officials as of early 2026. Keep the list to the most important ~15-20 officials.`,
+Include federal (President, VP, US Senators x2, US Rep), state (Governor, Lt Governor, state legislators), county, and local officials (Mayor, City Council, etc.). It is critically important that the local officials (Mayor especially) reflect the most recently elected or appointed person as of mid-2026 — do not use outdated information. Search current news and official government websites to verify. Keep the list to the most important ~15-20 officials.`,
       add_context_from_internet: true,
       model: "gemini_3_flash",
       response_json_schema: {
