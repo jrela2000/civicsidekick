@@ -40,17 +40,17 @@ const AuthenticatedApp = () => {
   }
 
   // Render the main app
+  const fallback = <div className="fixed inset-0 flex items-center justify-center"><div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div></div>;
+
   return (
     <Routes>
       <Route element={<Layout />}>
-        <Suspense fallback={<div className="fixed inset-0 flex items-center justify-center"><div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div></div>}>
-          <Route path="/" element={<Home />} />
-          <Route path="/officials" element={<Officials />} />
-          <Route path="/glossary" element={<Glossary />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/deadlines" element={<Deadlines />} />
-          <Route path="*" element={<PageNotFound />} />
-        </Suspense>
+        <Route path="/" element={<Suspense fallback={fallback}><Home /></Suspense>} />
+        <Route path="/officials" element={<Suspense fallback={fallback}><Officials /></Suspense>} />
+        <Route path="/glossary" element={<Suspense fallback={fallback}><Glossary /></Suspense>} />
+        <Route path="/settings" element={<Suspense fallback={fallback}><Settings /></Suspense>} />
+        <Route path="/deadlines" element={<Suspense fallback={fallback}><Deadlines /></Suspense>} />
+        <Route path="*" element={<PageNotFound />} />
       </Route>
     </Routes>
   );
