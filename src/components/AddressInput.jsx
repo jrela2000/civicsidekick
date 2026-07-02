@@ -26,8 +26,10 @@ export default function AddressInput({ onSearch, isLoading }) {
     <div className="w-full max-w-2xl mx-auto">
       <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
+          <label htmlFor="address-input" className="sr-only">Enter address or zip code</label>
           <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
           <Input
+            id="address-input"
             type="text"
             value={address}
             onChange={(e) => { setAddress(e.target.value); setError(""); }}

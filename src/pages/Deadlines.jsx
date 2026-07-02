@@ -100,7 +100,9 @@ Return the top 8-10 most important upcoming deadlines.`,
   }, [stateCode]);
 
   const handleAddToCalendar = async (deadline) => {
-    setAddingId(deadline.date + deadline.title);
+    const id = deadline.date + deadline.title;
+    setAddedIds(prev => new Set([...prev, id]));
+    setAddingId(id);
     try {
       const res = await base44.functions.invoke('createCalendarEvent', {
         title: deadline.title,
@@ -109,16 +111,11 @@ Return the top 8-10 most important upcoming deadlines.`,
       });
 
       if (res.data?.error === 'Google Calendar not connected') {
+        setAddedIds(prev => { const next = new Set(prev); next.delete(id); return next; });
         setNeedsCalendar(true);
-        setAddingId(null);
-        return;
-      }
-
-      if (res.data?.success) {
-        setAddedIds(prev => new Set([...prev, deadline.date + deadline.title]));
       }
     } catch (e) {
-      // ignore — user can try again
+      setAddedIds(prev => { const next = new Set(prev); next.delete(id); return next; });
     }
     setAddingId(null);
   };
@@ -177,7 +174,7 @@ Return the top 8-10 most important upcoming deadlines.`,
 
       {/* Loading */}
       {isLoading && (
-        <div className="text-center py-16">
+        <div className="text-center py-16" aria-live="polite" aria-busy="true">
           <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin mx-auto mb-4" />
           <p className="font-semibold text-foreground text-lg">Finding upcoming deadlines…</p>
           <p className="text-muted-foreground text-sm mt-1">{stateCode || resolvedState ? `Searching for deadlines in ${stateCode || resolvedState}` : "Loading..."}</p>

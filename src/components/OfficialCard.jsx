@@ -3,10 +3,10 @@ import { ChevronDown, ChevronUp, Phone, Mail, Globe, MapPin, Twitter, Facebook, 
 import { getOfficeDescription } from "../data/officeDescriptions";
 
 const levelColors = {
-  Federal: "bg-blue-100 text-blue-800 border-blue-200",
-  State: "bg-purple-100 text-purple-800 border-purple-200",
-  County: "bg-amber-100 text-amber-800 border-amber-200",
-  Local: "bg-green-100 text-green-800 border-green-200",
+  Federal: "bg-blue-500/10 text-blue-400 border-blue-500/30",
+  State: "bg-purple-500/10 text-purple-400 border-purple-500/30",
+  County: "bg-amber-500/10 text-amber-400 border-amber-500/30",
+  Local: "bg-green-500/10 text-green-400 border-green-500/30",
 };
 
 function SocialLink({ type, url }) {

@@ -6,6 +6,7 @@ const ROUTE_DEPTH = {
   "/glossary": 1,
   "/officials": 1,
   "/settings": 1,
+  "/deadlines": 1,
 };
 
 export function getDepth(pathname) {

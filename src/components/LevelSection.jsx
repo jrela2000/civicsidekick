@@ -5,25 +5,25 @@ import { useState } from "react";
 const levelConfig = {
   Federal: {
     emoji: "🏛️",
-    color: "border-blue-400 bg-blue-50",
+    color: "border-blue-500/40 bg-blue-500/10",
     headerColor: "bg-blue-600 text-white",
     description: "National government representatives"
   },
   State: {
     emoji: "🏢",
-    color: "border-purple-400 bg-purple-50",
+    color: "border-purple-500/40 bg-purple-500/10",
     headerColor: "bg-purple-600 text-white",
     description: "State government representatives"
   },
   County: {
     emoji: "🏘️",
-    color: "border-amber-400 bg-amber-50",
+    color: "border-amber-500/40 bg-amber-500/10",
     headerColor: "bg-amber-600 text-white",
     description: "County government representatives"
   },
   Local: {
     emoji: "🏙️",
-    color: "border-green-400 bg-green-50",
+    color: "border-green-500/40 bg-green-500/10",
     headerColor: "bg-green-600 text-white",
     description: "City & local government representatives"
   },

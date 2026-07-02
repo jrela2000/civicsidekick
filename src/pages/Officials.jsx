@@ -170,7 +170,7 @@ Include federal (President, VP, US Senators x2, US Rep), state (Governor, Lt Gov
 
       {/* Loading */}
       {isLoading && (
-        <div className="text-center py-16">
+        <div className="text-center py-16" aria-live="polite" aria-busy="true">
           <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin mx-auto mb-4" />
           <p className="font-semibold text-foreground text-lg">Finding your representatives…</p>
           <p className="text-muted-foreground text-sm mt-1">Searching civic data for: {address}</p>

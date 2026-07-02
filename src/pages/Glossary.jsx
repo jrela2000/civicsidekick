@@ -4,10 +4,10 @@ import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 const levelColors = {
-  Federal: "bg-blue-100 text-blue-700 border border-blue-200",
-  State: "bg-purple-100 text-purple-700 border border-purple-200",
-  County: "bg-amber-100 text-amber-700 border border-amber-200",
-  Local: "bg-green-100 text-green-700 border border-green-200",
+  Federal: "bg-blue-500/10 text-blue-400 border border-blue-500/30",
+  State: "bg-purple-500/10 text-purple-400 border border-purple-500/30",
+  County: "bg-amber-500/10 text-amber-400 border border-amber-500/30",
+  Local: "bg-green-500/10 text-green-400 border border-green-500/30",
 };
 
 const levelOrder = ["Federal", "State", "County", "Local"];

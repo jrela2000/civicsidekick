@@ -1,3 +1,4 @@
+import React, { Suspense, lazy } from 'react';
 import { Toaster } from "@/components/ui/toaster"
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
@@ -7,11 +8,12 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import ThemeProvider from './components/ThemeProvider';
 import PageNotFound from './lib/PageNotFound';
 import Layout from './components/Layout.jsx';
-import Home from './pages/Home';
-import Officials from './pages/Officials';
-import Glossary from './pages/Glossary';
-import Settings from './pages/Settings';
-import Deadlines from './pages/Deadlines';
+
+const Home = lazy(() => import('./pages/Home'));
+const Officials = lazy(() => import('./pages/Officials'));
+const Glossary = lazy(() => import('./pages/Glossary'));
+const Settings = lazy(() => import('./pages/Settings'));
+const Deadlines = lazy(() => import('./pages/Deadlines'));
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -41,12 +43,14 @@ const AuthenticatedApp = () => {
   return (
     <Routes>
       <Route element={<Layout />}>
-        <Route path="/" element={<Home />} />
-        <Route path="/officials" element={<Officials />} />
-        <Route path="/glossary" element={<Glossary />} />
-        <Route path="/settings" element={<Settings />} />
-        <Route path="/deadlines" element={<Deadlines />} />
-        <Route path="*" element={<PageNotFound />} />
+        <Suspense fallback={<div className="fixed inset-0 flex items-center justify-center"><div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div></div>}>
+          <Route path="/" element={<Home />} />
+          <Route path="/officials" element={<Officials />} />
+          <Route path="/glossary" element={<Glossary />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/deadlines" element={<Deadlines />} />
+          <Route path="*" element={<PageNotFound />} />
+        </Suspense>
       </Route>
     </Routes>
   );
