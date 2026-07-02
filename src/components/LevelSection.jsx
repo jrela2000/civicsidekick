@@ -36,8 +36,9 @@ export default function LevelSection({ level, officials }) {
   return (
     <div className={`rounded-2xl border-2 overflow-hidden ${config.color}`}>
       <button
-        className={`w-full flex items-center justify-between px-5 py-3 ${config.headerColor} font-semibold text-left`}
+        className={`w-full flex items-center justify-between px-5 py-3 min-h-[44px] ${config.headerColor} font-semibold text-left`}
         onClick={() => setCollapsed(!collapsed)}
+        aria-expanded={!collapsed}
       >
         <div className="flex items-center gap-2">
           <span className="text-xl">{config.emoji}</span>

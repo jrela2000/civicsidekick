@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { CalendarPlus, ExternalLink, Check, Loader2, ArrowLeft } from "lucide-react";
+import { CalendarPlus, Check, Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import AddressInput from "../components/AddressInput";
+import PullToRefresh from "../components/PullToRefresh";
 
 export default function Deadlines() {
   const [searchParams] = useSearchParams();
@@ -19,7 +20,6 @@ export default function Deadlines() {
   const [connecting, setConnecting] = useState(false);
   const [resolvedState, setResolvedState] = useState("");
 
-  // When address is provided but no state, resolve state from address
   useEffect(() => {
     if (address && !stateCode && !resolvedState) {
       const resolveState = async () => {
@@ -135,8 +135,12 @@ Return the top 8-10 most important upcoming deadlines.`,
 
   const handleNewSearch = (newAddress) => {
     setAddress(newAddress);
-    // Navigate with address param; state will be looked up
     navigate(`/deadlines?address=${encodeURIComponent(newAddress)}`);
+  };
+
+  const handlePullRefresh = async () => {
+    const s = stateCode || resolvedState;
+    if (s) await fetchDeadlines(s);
   };
 
   const categories = {
@@ -147,104 +151,106 @@ Return the top 8-10 most important upcoming deadlines.`,
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
-      {/* Header */}
-      <div className="bg-card border border-border rounded-2xl p-4 sm:p-6">
-        <h1 className="font-display font-bold text-2xl text-foreground mb-2">Election Deadlines</h1>
-        <p className="text-muted-foreground text-sm mb-4">
-          Upcoming election and voter registration deadlines. Add them to your calendar with one tap.
-        </p>
-        <AddressInput onSearch={handleNewSearch} isLoading={false} />
-      </div>
-
-      {/* Calendar connection prompt */}
-      {needsCalendar && (
-        <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6 text-center">
-          <CalendarPlus className="w-10 h-10 text-primary mx-auto mb-3" />
-          <h3 className="font-semibold text-foreground text-lg mb-2">Connect Your Google Calendar</h3>
+    <PullToRefresh onRefresh={handlePullRefresh}>
+      <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
+        {/* Header */}
+        <div className="bg-card border border-border rounded-2xl p-4 sm:p-6">
+          <h1 className="font-display font-bold text-2xl text-foreground mb-2">Election Deadlines</h1>
           <p className="text-muted-foreground text-sm mb-4">
-            Link your Google Calendar to save deadlines with a single tap.
+            Upcoming election and voter registration deadlines. Add them to your calendar with one tap.
           </p>
-          <Button onClick={handleConnectCalendar} disabled={connecting} className="gap-2">
-            {connecting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CalendarPlus className="w-4 h-4" />}
-            Connect Calendar
-          </Button>
+          <AddressInput onSearch={handleNewSearch} isLoading={false} />
         </div>
-      )}
 
-      {/* Loading */}
-      {isLoading && (
-        <div className="text-center py-16" aria-live="polite" aria-busy="true">
-          <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin mx-auto mb-4" />
-          <p className="font-semibold text-foreground text-lg">Finding upcoming deadlines…</p>
-          <p className="text-muted-foreground text-sm mt-1">{stateCode || resolvedState ? `Searching for deadlines in ${stateCode || resolvedState}` : "Loading..."}</p>
-        </div>
-      )}
-
-      {/* Error */}
-      {!isLoading && error && (
-        <div className="bg-card border border-border rounded-2xl p-6 text-center">
-          <p className="text-muted-foreground">{error}</p>
-          {address && (
-            <Button variant="outline" onClick={() => navigate("/")} className="gap-2 mt-4">
-              <ArrowLeft className="w-4 h-4" /> Try a Different Address
+        {/* Calendar connection prompt */}
+        {needsCalendar && (
+          <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6 text-center">
+            <CalendarPlus className="w-10 h-10 text-primary mx-auto mb-3" />
+            <h3 className="font-semibold text-foreground text-lg mb-2">Connect Your Google Calendar</h3>
+            <p className="text-muted-foreground text-sm mb-4">
+              Link your Google Calendar to save deadlines with a single tap.
+            </p>
+            <Button onClick={handleConnectCalendar} disabled={connecting} className="gap-2">
+              {connecting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CalendarPlus className="w-4 h-4" />}
+              Connect Calendar
             </Button>
-          )}
-        </div>
-      )}
-
-      {/* Deadlines list */}
-      {!isLoading && deadlines && deadlines.length > 0 && (
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="font-semibold text-foreground text-lg">
-              {deadlines.length} deadlines for {stateCode || resolvedState}
-            </h2>
           </div>
-          {deadlines.map((d) => {
-            const cat = categories[d.category] || categories.other;
-            const id = d.date + d.title;
-            const isAdded = addedIds.has(id);
-            const isAdding = addingId === id;
+        )}
 
-            return (
-              <div
-                key={id}
-                className="bg-card border border-border rounded-xl p-4 flex flex-col sm:flex-row sm:items-center gap-3"
-              >
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${cat.bg} ${cat.text} ${cat.border} border`}>
-                      {cat.label}
-                    </span>
-                    <span className="text-sm text-muted-foreground">
-                      {new Date(d.date + "T00:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" })}
-                    </span>
-                  </div>
-                  <h3 className="font-semibold text-foreground">{d.title}</h3>
-                  <p className="text-sm text-muted-foreground mt-0.5">{d.description}</p>
-                </div>
-                <Button
-                  variant={isAdded ? "secondary" : "default"}
-                  size="sm"
-                  disabled={isAdded || isAdding}
-                  onClick={() => handleAddToCalendar(d)}
-                  className="shrink-0 gap-2"
+        {/* Loading */}
+        {isLoading && (
+          <div className="text-center py-16" aria-live="polite" aria-busy="true">
+            <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin mx-auto mb-4" />
+            <p className="font-semibold text-foreground text-lg">Finding upcoming deadlines…</p>
+            <p className="text-muted-foreground text-sm mt-1">{stateCode || resolvedState ? `Searching for deadlines in ${stateCode || resolvedState}` : "Loading..."}</p>
+          </div>
+        )}
+
+        {/* Error */}
+        {!isLoading && error && (
+          <div className="bg-card border border-border rounded-2xl p-6 text-center">
+            <p className="text-muted-foreground">{error}</p>
+            {address && (
+              <Button variant="outline" onClick={() => navigate("/")} className="gap-2 mt-4">
+                <ArrowLeft className="w-4 h-4" /> Try a Different Address
+              </Button>
+            )}
+          </div>
+        )}
+
+        {/* Deadlines list */}
+        {!isLoading && deadlines && deadlines.length > 0 && (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 className="font-semibold text-foreground text-lg">
+                {deadlines.length} deadlines for {stateCode || resolvedState}
+              </h2>
+            </div>
+            {deadlines.map((d) => {
+              const cat = categories[d.category] || categories.other;
+              const id = d.date + d.title;
+              const isAdded = addedIds.has(id);
+              const isAdding = addingId === id;
+
+              return (
+                <div
+                  key={id}
+                  className="bg-card border border-border rounded-xl p-4 flex flex-col sm:flex-row sm:items-center gap-3"
                 >
-                  {isAdding ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : isAdded ? (
-                    <Check className="w-4 h-4" />
-                  ) : (
-                    <CalendarPlus className="w-4 h-4" />
-                  )}
-                  {isAdded ? "Added" : isAdding ? "Adding…" : "Add to Calendar"}
-                </Button>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${cat.bg} ${cat.text} ${cat.border} border`}>
+                        {cat.label}
+                      </span>
+                      <span className="text-sm text-muted-foreground">
+                        {new Date(d.date + "T00:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" })}
+                      </span>
+                    </div>
+                    <h3 className="font-semibold text-foreground">{d.title}</h3>
+                    <p className="text-sm text-muted-foreground mt-0.5">{d.description}</p>
+                  </div>
+                  <Button
+                    variant={isAdded ? "secondary" : "default"}
+                    size="sm"
+                    disabled={isAdded || isAdding}
+                    onClick={() => handleAddToCalendar(d)}
+                    className="shrink-0 gap-2"
+                  >
+                    {isAdding ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : isAdded ? (
+                      <Check className="w-4 h-4" />
+                    ) : (
+                      <CalendarPlus className="w-4 h-4" />
+                    )}
+                    {isAdded ? "Added" : isAdding ? "Adding…" : "Add to Calendar"}
+                  </Button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </PullToRefresh>
   );
 }

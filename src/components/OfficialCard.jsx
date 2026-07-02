@@ -59,8 +59,9 @@ export default function OfficialCard({ official }) {
           </div>
           <button
             onClick={() => setExpanded(!expanded)}
-            className="shrink-0 p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground select-none"
+            className="shrink-0 p-2.5 min-w-[44px] min-h-[44px] rounded-lg hover:bg-muted transition-colors text-muted-foreground select-none flex items-center justify-center"
             aria-label={expanded ? "Collapse details" : "Expand details"}
+            aria-expanded={expanded}
           >
             {expanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
           </button>
@@ -119,7 +120,8 @@ export default function OfficialCard({ official }) {
             <div className="border-t border-border pt-3">
               <button
                 onClick={() => setRoleExpanded(!roleExpanded)}
-                className="flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors w-full text-left"
+                className="flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors w-full text-left min-h-[44px]"
+                aria-expanded={roleExpanded}
               >
                 <span>📋 What do they do?</span>
                 {roleExpanded ? <ChevronUp className="w-4 h-4 ml-auto" /> : <ChevronDown className="w-4 h-4 ml-auto" />}
