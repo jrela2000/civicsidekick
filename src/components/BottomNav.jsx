@@ -1,5 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { Home, BookOpen, Settings, Calendar } from "lucide-react";
+import { getTabLastPath, saveTabPath } from "@/lib/tabHistory";
 
 const navLinks = [
   { to: "/", label: "Home", icon: Home },
@@ -12,22 +13,32 @@ export default function BottomNav() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const handleTabPress = (to) => {
-    const isActive = location.pathname === to;
+  const handleTabPress = (tabRoot) => {
+    const isActive = location.pathname === tabRoot ||
+      (tabRoot !== "/" && location.pathname.startsWith(tabRoot));
+
     if (isActive) {
-      navigate(to, { replace: true });
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      // Tapping active tab: scroll to top
+      saveTabPath(tabRoot, "");
+      navigate(tabRoot, { replace: true });
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } else {
-      navigate(to);
+      // Restore last visited path within this tab
+      const lastPath = getTabLastPath(tabRoot);
+      navigate(lastPath);
     }
   };
 
   return (
-    <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-50 bg-primary text-primary-foreground border-t border-primary-foreground/10"
-      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
+    <nav
+      className="sm:hidden fixed bottom-0 left-0 right-0 z-50 bg-primary text-primary-foreground border-t border-primary-foreground/10"
+      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+    >
       <div className="flex">
         {navLinks.map(({ to, label, icon: Icon }) => {
-          const active = location.pathname === to;
+          const active =
+            location.pathname === to ||
+            (to !== "/" && location.pathname.startsWith(to));
           return (
             <button
               key={to}

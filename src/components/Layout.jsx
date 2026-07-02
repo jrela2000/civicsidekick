@@ -4,6 +4,7 @@ import { useRef, useEffect } from "react";
 import BottomNav from "./BottomNav";
 import AppHeader from "./AppHeader";
 import { getDepth } from "../lib/navigationHistory";
+import { saveTabPath } from "@/lib/tabHistory";
 
 // Persist scroll position per tab path
 const scrollPositions = {};
@@ -16,22 +17,23 @@ export default function Layout() {
   const direction = currentDepth >= prevDepth.current ? 1 : -1;
   prevDepth.current = currentDepth;
 
-  // Save scroll before leaving, restore after arriving
+  // Save scroll + tab path; restore scroll after navigation
   useEffect(() => {
     const prev = prevPathnameRef.current;
     if (prev !== location.pathname) {
-      // Save old path's scroll position
       scrollPositions[prev] = window.scrollY;
       prevPathnameRef.current = location.pathname;
     }
 
-    // Restore scroll for new path (defer so the page has rendered)
+    // Persist the full path (including search) for tab restoration
+    saveTabPath(location.pathname, location.search);
+
     const saved = scrollPositions[location.pathname];
     const frame = requestAnimationFrame(() => {
       window.scrollTo(0, saved ?? 0);
     });
     return () => cancelAnimationFrame(frame);
-  }, [location.pathname]);
+  }, [location.pathname, location.search]);
 
   return (
     <div className="min-h-screen bg-background flex flex-col overflow-x-hidden">

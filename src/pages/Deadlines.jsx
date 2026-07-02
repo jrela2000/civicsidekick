@@ -5,6 +5,7 @@ import { CalendarPlus, Check, Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import AddressInput from "../components/AddressInput";
 import PullToRefresh from "../components/PullToRefresh";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function Deadlines() {
   const [searchParams] = useSearchParams();
@@ -19,6 +20,7 @@ export default function Deadlines() {
   const [needsCalendar, setNeedsCalendar] = useState(false);
   const [connecting, setConnecting] = useState(false);
   const [resolvedState, setResolvedState] = useState("");
+  const { toast } = useToast();
 
   useEffect(() => {
     if (address && !stateCode && !resolvedState) {
@@ -116,6 +118,11 @@ Return the top 8-10 most important upcoming deadlines.`,
       }
     } catch (e) {
       setAddedIds(prev => { const next = new Set(prev); next.delete(id); return next; });
+      toast({
+        title: "Couldn't add to calendar",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
     }
     setAddingId(null);
   };
