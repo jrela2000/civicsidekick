@@ -31,6 +31,8 @@ export default function BottomNav() {
 
   return (
     <nav
+      role="tablist"
+      aria-label="Main navigation"
       className="sm:hidden fixed bottom-0 left-0 right-0 z-50 bg-primary text-primary-foreground border-t border-primary-foreground/10"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
@@ -42,13 +44,16 @@ export default function BottomNav() {
           return (
             <button
               key={to}
+              role="tab"
+              aria-selected={active}
+              aria-label={label}
               onClick={() => handleTabPress(to)}
               className={`flex-1 flex flex-col items-center gap-1 py-3 text-xs font-medium transition-colors select-none ${
                 active ? "text-primary-foreground" : "text-primary-foreground/50"
               }`}
             >
-              <Icon className="w-5 h-5" />
-              {label}
+              <Icon className="w-5 h-5" aria-hidden="true" />
+              <span>{label}</span>
             </button>
           );
         })}

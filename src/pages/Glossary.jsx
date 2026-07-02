@@ -2,6 +2,7 @@ import { getAllOfficeDescriptions } from "../data/officeDescriptions";
 import { useState } from "react";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import MobileSelect from "@/components/MobileSelect";
 
 const levelColors = {
   Federal: "bg-blue-500/10 text-blue-400 border border-blue-500/30",
@@ -14,12 +15,16 @@ const levelOrder = ["Federal", "State", "County", "Local"];
 
 export default function Glossary() {
   const [search, setSearch] = useState("");
+  const [levelFilter, setLevelFilter] = useState("");
   const all = getAllOfficeDescriptions();
 
-  const filtered = Object.entries(all).filter(([title, info]) =>
-    title.toLowerCase().includes(search.toLowerCase()) ||
-    info.description.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = Object.entries(all).filter(([title, info]) => {
+    const matchesSearch =
+      title.toLowerCase().includes(search.toLowerCase()) ||
+      info.description.toLowerCase().includes(search.toLowerCase());
+    const matchesLevel = !levelFilter || info.level === levelFilter;
+    return matchesSearch && matchesLevel;
+  });
 
   const grouped = levelOrder.reduce((acc, level) => {
     const entries = filtered.filter(([, info]) => info.level === level);
@@ -36,15 +41,32 @@ export default function Glossary() {
         </p>
       </div>
 
-      {/* Search */}
-      <div className="relative max-w-md mx-auto mb-10">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input
-          placeholder="Search offices…"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="pl-9 h-11 rounded-xl border-2"
-        />
+      {/* Search + Level filter */}
+      <div className="flex gap-3 max-w-md mx-auto mb-10">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Search offices…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="pl-9 h-11 rounded-xl border-2"
+          />
+        </div>
+        <div className="w-36 shrink-0">
+          <MobileSelect
+            value={levelFilter}
+            onChange={setLevelFilter}
+            placeholder="All levels"
+            label="Filter by level"
+            options={[
+              { value: "", label: "All levels" },
+              { value: "Federal", label: "Federal" },
+              { value: "State", label: "State" },
+              { value: "County", label: "County" },
+              { value: "Local", label: "Local" },
+            ]}
+          />
+        </div>
       </div>
 
       {/* Grouped Entries */}
