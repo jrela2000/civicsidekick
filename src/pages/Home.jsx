@@ -32,7 +32,7 @@ export default function Home() {
             Non-partisan · Ad-free · Privacy-first
           </div>
           <h1 className="font-display font-bold text-4xl sm:text-5xl lg:text-6xl leading-tight mb-6">
-            Your officials.<br />Your voice.<br />One tap.
+            Your officials.<br />Your voice.<br /><span className="text-accent">One tap.</span>
           </h1>
           <p className="text-primary-foreground/80 text-lg sm:text-xl max-w-2xl mx-auto mb-10 leading-relaxed">
             Enter your address and meet every person representing you — from your Governor to your City Council. No signup, no tracking, no nonsense.

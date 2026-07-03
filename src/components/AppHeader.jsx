@@ -31,9 +31,9 @@ export default function AppHeader() {
         )}
         {isRoot ? (
           <img
-            src="https://media.base44.com/images/public/69c8b5b7d04008fffce57b83/eacc81739_civicsidekick_logo.png"
+            src="https://media.base44.com/images/public/69c8b5b7d04008fffce57b83/b3c790715_civicsidekick_logo_with_padding.png"
             alt="Civic Sidekick"
-            className="h-8 w-8 object-contain invert"
+            className="h-8 w-8 object-contain"
           />
         ) : null}
         <span className="font-display font-bold text-lg">
