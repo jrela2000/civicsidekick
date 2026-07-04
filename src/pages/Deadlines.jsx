@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { CalendarPlus, Check, Loader2, ArrowLeft } from "lucide-react";
+import { CalendarPlus, Check, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import AddressInput from "../components/AddressInput";
 import PullToRefresh from "../components/PullToRefresh";
-import { useToast } from "@/components/ui/use-toast";
 
 export default function Deadlines() {
   const [searchParams] = useSearchParams();
@@ -15,12 +14,8 @@ export default function Deadlines() {
   const [deadlines, setDeadlines] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [addingId, setAddingId] = useState(null);
   const [addedIds, setAddedIds] = useState(new Set());
-  const [needsCalendar, setNeedsCalendar] = useState(false);
-  const [connecting, setConnecting] = useState(false);
   const [resolvedState, setResolvedState] = useState("");
-  const { toast } = useToast();
 
   useEffect(() => {
     if (address && !stateCode && !resolvedState) {
@@ -37,6 +32,7 @@ export default function Deadlines() {
         } else {
           setError("Could not determine your state from that address. Please try again.");
           setIsLoading(false);
+          setTimeout(() => setError(""), 5000);
         }
       };
       resolveState();
@@ -88,6 +84,7 @@ Return the top 8-10 most important upcoming deadlines.`,
     if (!result || !result.deadlines || result.deadlines.length === 0) {
       setError("Couldn't find upcoming deadlines. Try again later.");
       setIsLoading(false);
+      setTimeout(() => setError(""), 5000);
       return;
     }
 
@@ -101,43 +98,23 @@ Return the top 8-10 most important upcoming deadlines.`,
     }
   }, [stateCode]);
 
-  const handleAddToCalendar = async (deadline) => {
-    const id = deadline.date + deadline.title;
-    setAddedIds(prev => new Set([...prev, id]));
-    setAddingId(id);
-    try {
-      const res = await base44.functions.invoke('createCalendarEvent', {
-        title: deadline.title,
-        date: deadline.date,
-        description: `${deadline.description}\n\nAdded by Civic Sidekick`
-      });
-
-      if (res.data?.error === 'Google Calendar not connected') {
-        setAddedIds(prev => { const next = new Set(prev); next.delete(id); return next; });
-        setNeedsCalendar(true);
-      }
-    } catch (e) {
-      setAddedIds(prev => { const next = new Set(prev); next.delete(id); return next; });
-      toast({
-        title: "Couldn't add to calendar",
-        description: "Something went wrong. Please try again.",
-        variant: "destructive",
-      });
-    }
-    setAddingId(null);
+  // Build a Google Calendar URL that works natively on all platforms
+  const buildGoogleCalendarUrl = (deadline) => {
+    const dateStr = deadline.date.replace(/-/g, "");
+    const params = new URLSearchParams({
+      action: "TEMPLATE",
+      text: deadline.title,
+      dates: `${dateStr}/${dateStr}`,
+      details: `${deadline.description}\n\nAdded by Civic Sidekick`,
+    });
+    return `https://calendar.google.com/calendar/render?${params.toString()}`;
   };
 
-  const handleConnectCalendar = async () => {
-    setConnecting(true);
-    try {
-      const { success } = await base44.connectors.connectAppUser("6a340c59db0940a00e581362");
-      if (success) {
-        setNeedsCalendar(false);
-      }
-    } catch (e) {
-      // connection flow will redirect
-    }
-    setConnecting(false);
+  const handleAddToCalendar = (deadline) => {
+    const id = deadline.date + deadline.title;
+    // Open Google Calendar directly — works on all platforms including Android
+    window.open(buildGoogleCalendarUrl(deadline), "_blank", "noopener,noreferrer");
+    setAddedIds(prev => new Set([...prev, id]));
   };
 
   const handleNewSearch = (newAddress) => {
@@ -168,21 +145,6 @@ Return the top 8-10 most important upcoming deadlines.`,
           </p>
           <AddressInput onSearch={handleNewSearch} isLoading={false} />
         </div>
-
-        {/* Calendar connection prompt */}
-        {needsCalendar && (
-          <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6 text-center">
-            <CalendarPlus className="w-10 h-10 text-primary mx-auto mb-3" />
-            <h3 className="font-semibold text-foreground text-lg mb-2">Connect Your Google Calendar</h3>
-            <p className="text-muted-foreground text-sm mb-4">
-              Link your Google Calendar to save deadlines with a single tap.
-            </p>
-            <Button onClick={handleConnectCalendar} disabled={connecting} className="gap-2">
-              {connecting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CalendarPlus className="w-4 h-4" />}
-              Connect Calendar
-            </Button>
-          </div>
-        )}
 
         {/* Loading */}
         {isLoading && (
@@ -217,7 +179,6 @@ Return the top 8-10 most important upcoming deadlines.`,
               const cat = categories[d.category] || categories.other;
               const id = d.date + d.title;
               const isAdded = addedIds.has(id);
-              const isAdding = addingId === id;
 
               return (
                 <div
@@ -239,18 +200,11 @@ Return the top 8-10 most important upcoming deadlines.`,
                   <Button
                     variant={isAdded ? "secondary" : "default"}
                     size="sm"
-                    disabled={isAdded || isAdding}
                     onClick={() => handleAddToCalendar(d)}
                     className="shrink-0 gap-2"
                   >
-                    {isAdding ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : isAdded ? (
-                      <Check className="w-4 h-4" />
-                    ) : (
-                      <CalendarPlus className="w-4 h-4" />
-                    )}
-                    {isAdded ? "Added" : isAdding ? "Adding…" : "Add to Calendar"}
+                    {isAdded ? <Check className="w-4 h-4" /> : <CalendarPlus className="w-4 h-4" />}
+                    {isAdded ? "Opened" : "Add to Calendar"}
                   </Button>
                 </div>
               );
