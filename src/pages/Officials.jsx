@@ -151,7 +151,10 @@ Include federal (President, VP, US Senators x2, US Rep), state (Governor, Lt Gov
           <div className="text-center py-16" aria-live="polite" aria-busy="true">
             <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin mx-auto mb-4" />
             <p className="font-semibold text-foreground text-lg">Finding your representatives…</p>
-            <p className="text-muted-foreground text-sm mt-1">Searching civic data for: {address}</p>
+            <p className="text-muted-foreground text-sm mt-1">Searching live civic data for: {address}</p>
+            <p className="text-muted-foreground/70 text-xs mt-3 max-w-xs mx-auto leading-relaxed">
+              This searches multiple live sources in real time, so it may take 10–20 seconds. We're improving speed in future builds — thank you for your patience!
+            </p>
           </div>
         )}
 
@@ -214,6 +217,24 @@ Include federal (President, VP, US Senators x2, US Rep), state (Governor, Lt Gov
               {LEVELS_ORDER.filter(l => grouped[l]).map(level => (
                 <LevelSection key={level} level={level} officials={grouped[level]} />
               ))}
+            </div>
+
+            {/* Results quality notice + feedback */}
+            <div className="bg-muted/50 border border-border rounded-2xl p-5 space-y-3">
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                <span className="font-medium text-foreground">Results look incomplete or outdated?</span> Hit the <strong>Refresh</strong> button above — sometimes the data doesn't fully load on the first pass.
+              </p>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Found an error or have a suggestion?{" "}
+                <a
+                  href="https://civicsidekick.app/feedback"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary underline underline-offset-2 hover:text-primary/80 transition-colors font-medium"
+                >
+                  Share your feedback →
+                </a>
+              </p>
             </div>
           </>
         )}

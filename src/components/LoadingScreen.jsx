@@ -12,9 +12,12 @@ export default function LoadingScreen({ message = "Loading…" }) {
       </div>
 
       {/* App name */}
-      <div className="text-center">
+      <div className="text-center max-w-xs px-6">
         <p className="font-display font-bold text-xl text-foreground tracking-tight">Civic Sidekick</p>
         <p className="text-muted-foreground text-sm mt-1">{message}</p>
+        <p className="text-muted-foreground/70 text-xs mt-3 leading-relaxed">
+          This takes a moment because we're searching live civic data across multiple sources in real time. We're working on making this faster in future builds — thanks for your patience! 🙏
+        </p>
       </div>
 
       {/* Animated dots */}
