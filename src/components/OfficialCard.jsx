@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ChevronDown, ChevronUp, Phone, Mail, Globe, MapPin, Twitter, Facebook, Youtube } from "lucide-react";
 import { getOfficeDescription } from "../data/officeDescriptions";
+import WhoIsRunning from "./WhoIsRunning";
 
 const levelColors = {
   Federal: "bg-blue-500/10 text-blue-400 border-blue-500/30",
@@ -27,7 +28,7 @@ function SocialLink({ type, url }) {
   );
 }
 
-export default function OfficialCard({ official }) {
+export default function OfficialCard({ official, candidates }) {
   const [expanded, setExpanded] = useState(false);
   const [roleExpanded, setRoleExpanded] = useState(false);
 
@@ -114,6 +115,9 @@ export default function OfficialCard({ official }) {
               ))}
             </div>
           )}
+
+          {/* Who's Running */}
+          <WhoIsRunning candidates={candidates} officeName={official.title} />
 
           {/* Role Description */}
           {description && (

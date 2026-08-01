@@ -59,13 +59,15 @@ export default function Officials() {
     setFromCache(false);
 
     const result = await base44.integrations.Core.InvokeLLM({
-      prompt: `Look up elected officials for the US address: "${searchAddress}" as of June 2026. Search for the most current information available.
+      prompt: `Look up elected officials for the US address: "${searchAddress}" as of mid-2026. Search for the most current information available.
 
 Return JSON with:
 - state: 2-letter state abbreviation
-- officials: array of objects with fields: name, title, party, level (Federal/State/County/Local), phones (array), emails (array), urls (array)
+- officials: array of objects with fields: name, title, party, level (Federal/State/County/Local), phones (array), emails (array), urls (array), candidates (array of objects with: name, party, url (campaign website if known, otherwise null), isIncumbent (boolean))
 
-Include federal (President, VP, US Senators x2, US Rep), state (Governor, Lt Governor, state legislators), county, and local officials (Mayor, City Council, etc.). It is critically important that the local officials (Mayor especially) reflect the most recently elected or appointed person as of mid-2026 — do not use outdated information. Search current news and official government websites to verify. Keep the list to the most important ~15-20 officials.`,
+Include federal (President, VP, US Senators x2, US Rep), state (Governor, Lt Governor, state legislators), county, and local officials (Mayor, City Council, etc.). It is critically important that the local officials (Mayor especially) reflect the most recently elected or appointed person as of mid-2026. Search current news and official government websites to verify. Keep the list to the most important ~15-20 officials.
+
+For the candidates field on each official: list all known candidates running for that seat in the next upcoming election (include the incumbent as a candidate with isIncumbent: true if they are running for re-election). If no election is imminent or no candidates are known, return an empty array.`,
       add_context_from_internet: true,
       model: "gemini_3_flash",
       response_json_schema: {
@@ -83,7 +85,19 @@ Include federal (President, VP, US Senators x2, US Rep), state (Governor, Lt Gov
                 level: { type: "string" },
                 phones: { type: "array", items: { type: "string" } },
                 emails: { type: "array", items: { type: "string" } },
-                urls: { type: "array", items: { type: "string" } }
+                urls: { type: "array", items: { type: "string" } },
+                candidates: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      name: { type: "string" },
+                      party: { type: "string" },
+                      url: { type: "string" },
+                      isIncumbent: { type: "boolean" }
+                    }
+                  }
+                }
               }
             }
           }

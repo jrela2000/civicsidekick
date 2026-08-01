@@ -52,7 +52,7 @@ export default function LevelSection({ level, officials }) {
       {!collapsed && (
         <div className="p-4 grid gap-3 sm:grid-cols-2">
           {officials.map((official, i) => (
-            <OfficialCard key={i} official={official} />
+            <OfficialCard key={i} official={official} candidates={official.candidates} />
           ))}
         </div>
       )}
