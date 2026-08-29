@@ -4,6 +4,7 @@ import { base44 } from "@/api/base44Client";
 import AddressInput from "../components/AddressInput";
 import LevelSection from "../components/LevelSection";
 import VoterRegistration from "../components/VoterRegistration";
+import PollWorkerCta from "../components/PollWorkerCta";
 import PullToRefresh from "../components/PullToRefresh";
 import { AlertCircle, ArrowLeft, RefreshCw, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -209,6 +210,9 @@ For the candidates field on each official: list all known candidates running for
 
             {/* Voter Registration */}
             {state && <VoterRegistration state={state} />}
+
+            {/* Be a Poll Worker */}
+            <PollWorkerCta />
 
             {/* Deadlines link */}
             {state && (
